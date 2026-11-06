@@ -12,6 +12,9 @@ Production-образ збирається у кілька етапів, міс�
 Локальний образ має розмір близько 188 MB. Він надає `/health` з build SHA,
 `/ready` для перевірки готовності та Prometheus `/metrics`. PWA кешує статичну
 оболонку; API та WebSocket не кешуються.
+На Railway для збереження журналів між деплоями додайте Railway Volume з mount
+path `/data`; `LOG_DIR` у контейнері заданий як `/data/logs`. Не додавайте
+Dockerfile `VOLUME`: Railway відхиляє цю інструкцію під час валідації.
 
 Workflow [release.yml](./.github/workflows/release.yml) публікує образ у GHCR для
 тегів `lab-08` та `v*`. Для автоматичного деплою треба налаштувати secrets
