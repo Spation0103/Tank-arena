@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Tank Arena",
+  "short_name": "Tank Arena",
+  "description": "Мультиплеєрна танкова арена з авторитетною серверною симуляцією.",
+  "lang": "uk",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111511",
+  "theme_color": "#111511",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icons/tank.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

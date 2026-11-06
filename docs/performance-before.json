@@ -1,0 +1,129 @@
+{
+  "label": "before",
+  "generatedAt": "2026-11-06T16:07:41.339Z",
+  "durationSeconds": 30,
+  "browserClients": 8,
+  "frameTimesMs": {
+    "samples": 10974,
+    "p50": 16.700000000000728,
+    "p95": 33.400000000001455,
+    "p99": 50,
+    "max": 83.40000000000146
+  },
+  "longTasks": {
+    "count": 4,
+    "maxMs": 70
+  },
+  "nodeGcPausesMs": {
+    "count": 133,
+    "total": 117.13360000401735,
+    "max": 18.558399999514222
+  },
+  "serverStepMs": {
+    "samples": 978,
+    "p50": 0.0761000000002241,
+    "p95": 0.18100000000049477,
+    "p99": 0.2988999999997759,
+    "max": 0.992399999999634
+  },
+  "hottestClientFunctions": [
+    {
+      "functionName": "(idle)",
+      "sampledMicroseconds": 24689350
+    },
+    {
+      "functionName": "(program)",
+      "sampledMicroseconds": 6151356
+    },
+    {
+      "functionName": "u",
+      "sampledMicroseconds": 301917
+    },
+    {
+      "functionName": "d",
+      "sampledMicroseconds": 223491
+    },
+    {
+      "functionName": "f",
+      "sampledMicroseconds": 201324
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledMicroseconds": 174899
+    },
+    {
+      "functionName": "id",
+      "sampledMicroseconds": 128970
+    },
+    {
+      "functionName": "e._zod.parse",
+      "sampledMicroseconds": 99916
+    },
+    {
+      "functionName": "L",
+      "sampledMicroseconds": 90039
+    },
+    {
+      "functionName": "ud",
+      "sampledMicroseconds": 75459
+    },
+    {
+      "functionName": "(garbage collector)",
+      "sampledMicroseconds": 61098
+    },
+    {
+      "functionName": "y",
+      "sampledMicroseconds": 54107
+    }
+  ],
+  "largestSampledAllocators": [
+    {
+      "functionName": "(V8 API)",
+      "sampledBytes": 1079080
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledBytes": 295176
+    },
+    {
+      "functionName": "m",
+      "sampledBytes": 164240
+    },
+    {
+      "functionName": "(BYTECODE_COMPILER)",
+      "sampledBytes": 140988
+    },
+    {
+      "functionName": "compile",
+      "sampledBytes": 70076
+    },
+    {
+      "functionName": "a",
+      "sampledBytes": 65596
+    },
+    {
+      "functionName": "UtilityScript",
+      "sampledBytes": 65588
+    },
+    {
+      "functionName": "(PARSER)",
+      "sampledBytes": 65576
+    },
+    {
+      "functionName": "ki",
+      "sampledBytes": 65572
+    },
+    {
+      "functionName": "ad",
+      "sampledBytes": 49160
+    },
+    {
+      "functionName": "mf",
+      "sampledBytes": 34240
+    },
+    {
+      "functionName": "ld",
+      "sampledBytes": 33288
+    }
+  ]
+}

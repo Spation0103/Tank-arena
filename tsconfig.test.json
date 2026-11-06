@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "outDir": ".test-dist",
+    "types": ["node", "vite/client"],
+    "noCheck": true
+  },
+  "include": [
+    "client/src/**/*.ts",
+    "client/tests/**/*.ts",
+    "server/**/*.ts",
+    "server/tests/**/*.ts",
+    "shared/**/*.ts",
+    "shared/tests/**/*.ts"
+  ],
+  "exclude": ["**/build/**", "**/node_modules/**"]
+}

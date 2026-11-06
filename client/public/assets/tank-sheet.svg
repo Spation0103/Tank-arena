@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32">
+  <g transform="translate(0 0)">
+    <path fill="#333b30" d="M3 4h26v6H3zm0 18h26v6H3z"/>
+    <path fill="#c1e886" d="M6 9h20v14H6z"/>
+    <path fill="#d8e6bd" d="M19 14h12v4H19z"/>
+    <circle cx="15" cy="16" r="5" fill="#f2f5df"/>
+  </g>
+  <g transform="translate(32 0)">
+    <path fill="#333b30" d="M3 4h26v6H3zm0 18h26v6H3z"/>
+    <path fill="#e7a96d" d="M6 9h20v14H6z"/>
+    <path fill="#f3d9b8" d="M19 14h12v4H19z"/>
+    <circle cx="15" cy="16" r="5" fill="#fff2dc"/>
+  </g>
+  <g transform="translate(64 0)">
+    <path fill="#333b30" d="M3 4h26v6H3zm0 18h26v6H3z"/>
+    <path fill="#8bc6d8" d="M6 9h20v14H6z"/>
+    <path fill="#cce9f0" d="M19 14h12v4H19z"/>
+    <circle cx="15" cy="16" r="5" fill="#e8f7fb"/>
+  </g>
+  <g transform="translate(96 0)">
+    <path fill="#333b30" d="M3 4h26v6H3zm0 18h26v6H3z"/>
+    <path fill="#cf9cdd" d="M6 9h20v14H6z"/>
+    <path fill="#f0d7f5" d="M19 14h12v4H19z"/>
+    <circle cx="15" cy="16" r="5" fill="#fff0ff"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+{
+  "name": "@tank-arena/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p ../tsconfig.server.json",
+    "start": "node build/server/index.js",
+    "test": "vitest run --project server"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "assets": [
+    { "key": "tank", "type": "image", "url": "/assets/tank-sheet.svg" },
+    { "key": "bullet", "type": "image", "url": "/assets/bullet-sheet.svg" },
+    {
+      "key": "asteroid",
+      "type": "image",
+      "url": "/assets/asteroid-sheet.svg"
+    },
+    { "key": "shot", "type": "audio", "url": "/assets/shot.wav" },
+    { "key": "hit", "type": "audio", "url": "/assets/hit.wav" },
+    {
+      "key": "explosion",
+      "type": "audio",
+      "url": "/assets/explosion.wav"
+    }
+  ]
+}

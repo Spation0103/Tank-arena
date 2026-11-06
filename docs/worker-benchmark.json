@@ -1,0 +1,17 @@
+{
+  "iterations": 1200,
+  "simulatedClients": 8,
+  "input": "forward + right + fire",
+  "mainThread": {
+    "durationMs": 12.299999997019768,
+    "ticks": 1200,
+    "bullets": 23,
+    "maxMainThreadTimerDelayMs": 3
+  },
+  "workerThread": {
+    "durationMs": 10.599999997764826,
+    "ticks": 1200,
+    "bullets": 23,
+    "maxMainThreadTimerDelayMs": 0.4000000022351742
+  }
+}

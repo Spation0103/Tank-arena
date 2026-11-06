@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Build container image
+        run: docker build -t tank-arena:ci .
+      - name: Enforce runtime image size budget
+        shell: bash
+        run: test "$(docker image inspect -f '{{.Size}}' tank-arena:ci)" -lt 200000000
+      - name: Check health and graceful SIGTERM shutdown
+        shell: bash
+        run: |
+          docker run -d --name tank-arena-ci -p 127.0.0.1:3001:3001 \
+            -e BUILD_SHA=ci -e ALLOWED_ORIGINS=http://127.0.0.1:3001 \
+            tank-arena:ci
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001/ready; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:3001/health | grep '"buildSha":"ci"'
+          curl --fail --silent http://127.0.0.1:3001/metrics | grep tank_arena_process_resident_memory_bytes
+          docker stop --time 10 tank-arena-ci
+          test "$(docker inspect -f '{{.State.ExitCode}}' tank-arena-ci)" = "0"
+          docker rm tank-arena-ci

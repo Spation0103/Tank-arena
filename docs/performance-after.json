@@ -1,0 +1,129 @@
+{
+  "label": "after",
+  "generatedAt": "2026-11-06T16:34:02.636Z",
+  "durationSeconds": 30,
+  "browserClients": 8,
+  "frameTimesMs": {
+    "samples": 14194,
+    "p50": 16.699999999999818,
+    "p95": 16.799999999999272,
+    "p99": 33.29999999999927,
+    "max": 50
+  },
+  "longTasks": {
+    "count": 1,
+    "maxMs": 63
+  },
+  "nodeGcPausesMs": {
+    "count": 30,
+    "total": 77.0124000031501,
+    "max": 8.836300000548363
+  },
+  "serverStepMs": {
+    "samples": 966,
+    "p50": 0.07819999999992433,
+    "p95": 0.17510000000038417,
+    "p99": 0.3389999999999418,
+    "max": 0.8595000000004802
+  },
+  "hottestClientFunctions": [
+    {
+      "functionName": "(idle)",
+      "sampledMicroseconds": 19295680
+    },
+    {
+      "functionName": "(program)",
+      "sampledMicroseconds": 11395920
+    },
+    {
+      "functionName": "h",
+      "sampledMicroseconds": 309352
+    },
+    {
+      "functionName": "l",
+      "sampledMicroseconds": 280567
+    },
+    {
+      "functionName": "d",
+      "sampledMicroseconds": 184403
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledMicroseconds": 162694
+    },
+    {
+      "functionName": "e._zod.parse",
+      "sampledMicroseconds": 80861
+    },
+    {
+      "functionName": "yd",
+      "sampledMicroseconds": 53705
+    },
+    {
+      "functionName": "a",
+      "sampledMicroseconds": 48958
+    },
+    {
+      "functionName": "(garbage collector)",
+      "sampledMicroseconds": 47275
+    },
+    {
+      "functionName": "dd",
+      "sampledMicroseconds": 45470
+    },
+    {
+      "functionName": "Gl",
+      "sampledMicroseconds": 43510
+    }
+  ],
+  "largestSampledAllocators": [
+    {
+      "functionName": "(V8 API)",
+      "sampledBytes": 675352
+    },
+    {
+      "functionName": "(anonymous)",
+      "sampledBytes": 590472
+    },
+    {
+      "functionName": "m",
+      "sampledBytes": 98656
+    },
+    {
+      "functionName": "compile",
+      "sampledBytes": 71712
+    },
+    {
+      "functionName": "(BYTECODE_COMPILER)",
+      "sampledBytes": 67008
+    },
+    {
+      "functionName": "UtilityScript",
+      "sampledBytes": 65572
+    },
+    {
+      "functionName": "x",
+      "sampledBytes": 65568
+    },
+    {
+      "functionName": "hd",
+      "sampledBytes": 65544
+    },
+    {
+      "functionName": "collect",
+      "sampledBytes": 46848
+    },
+    {
+      "functionName": "innerSerialize",
+      "sampledBytes": 34132
+    },
+    {
+      "functionName": "query",
+      "sampledBytes": 34128
+    },
+    {
+      "functionName": "e._zod.parse",
+      "sampledBytes": 33280
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"type":"join","roomId":"ALPHA-07","playerId":"75793ee4-f4b3-4bd8-acec-db8f365dd9f5","name":"Pilot"}
+{"type":"chat","roomId":"ALPHA-07","playerId":"75793ee4-f4b3-4bd8-acec-db8f365dd9f5","name":"Pilot","text":"аа"}
+{"type":"chat","roomId":"ALPHA-07","playerId":"75793ee4-f4b3-4bd8-acec-db8f365dd9f5","name":"Pilot","text":"а"}
+{"type":"leave","roomId":"ALPHA-07","playerId":"75793ee4-f4b3-4bd8-acec-db8f365dd9f5","name":"Pilot","reason":"leave"}
