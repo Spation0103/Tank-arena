@@ -28,7 +28,7 @@ import { ClientPrediction } from "./prediction.js";
 import type { PredictedState } from "./prediction.js";
 import { SERVER_DT } from "./physics.js";
 import { createRenderer } from "./renderer.js";
-import { Bullet, Ship } from "./entities.js";
+import { Asteroid, Bullet, Pickup, Ship } from "./entities.js";
 import type { Entity } from "./entities.js";
 import { Vector2 } from "./vector2.js";
 import { createArenaWorld } from "./world.js";
@@ -307,7 +307,7 @@ function updateConnection(
 
 function updateRoster(): void {
   const players = [...roster.values()];
-  playerCount.textContent = `${players.length} TANK${players.length === 1 ? "" : "S"}`;
+  playerCount.textContent = `${players.length} ГРАВЦІ`;
   playerList.replaceChildren();
   if (players.length === 0) {
     const empty = document.createElement("li");
@@ -325,9 +325,29 @@ function updateRoster(): void {
     name.textContent = player.id === localId ? "ВИ" : player.name;
     const role = document.createElement("span");
     role.className = "player-role";
-    role.textContent = player.id === localId ? "YOU" : "PLAYER";
+    role.textContent = player.id === localId ? "ВИ" : "ГРАВЕЦЬ";
     item.append(swatch, name, role);
     playerList.append(item);
+  }
+}
+
+function syncArenaEntities(snapshot: StateMessage, currentWorld: World): void {
+  for (const obstacle of snapshot.obstacles) {
+    const asteroid = currentWorld.get(
+      asEntityId(`arena-obstacle-${obstacle.index}`),
+    );
+    if (!(asteroid instanceof Asteroid)) continue;
+    asteroid.previousPosition.copy(asteroid.position);
+    asteroid.position.set(obstacle.x, obstacle.y);
+    asteroid.hp = obstacle.hp;
+    asteroid.maxHp = obstacle.maxHp;
+    asteroid.dead = obstacle.hp <= 0;
+  }
+  const pickup = currentWorld.get(asEntityId("arena-pickup"));
+  if (pickup instanceof Pickup) {
+    pickup.previousPosition.copy(pickup.position);
+    pickup.position.set(snapshot.pickup.x, snapshot.pickup.y);
+    pickup.active = snapshot.pickup.active;
   }
 }
 
@@ -346,6 +366,7 @@ function handleSnapshot(snapshot: StateMessage): void {
     .filter((tank): tank is RenderTank => tank !== null);
   const currentIds = new Set(tanks.map((tank) => tank.id));
   const currentWorld = requireWorld();
+  syncArenaEntities(snapshot, currentWorld);
 
   for (const tankState of tanks) {
     const found = currentWorld.get(tankState.id);
@@ -519,8 +540,8 @@ function applyRemoteInterpolation(): void {
       }
     }
     ship.position.set(
-      wrap(previous.x + wrappedDelta(next.x - previous.x, 960) * alpha, 960),
-      wrap(previous.y + wrappedDelta(next.y - previous.y, 600) * alpha, 600),
+      Math.max(16, Math.min(944, previous.x + (next.x - previous.x) * alpha)),
+      Math.max(16, Math.min(584, previous.y + (next.y - previous.y) * alpha)),
     );
     ship.angle =
       previous.angle + shortestAngle(next.angle - previous.angle) * alpha;
@@ -540,14 +561,6 @@ function syncShip(ship: Ship, state: TankState): void {
 
 function colorForIndex(index: number): string {
   return ["#c1e886", "#e7a96d", "#8bc6d8", "#cf9cdd"][index % 4] ?? "#c1e886";
-}
-
-function wrappedDelta(delta: number, size: number): number {
-  return ((((delta + size / 2) % size) + size) % size) - size / 2;
-}
-
-function wrap(value: number, limit: number): number {
-  return ((value % limit) + limit) % limit;
 }
 
 function shortestAngle(angle: number): number {
@@ -630,15 +643,15 @@ function update(dt: number): void {
 function updateCombatHud(): void {
   const ship = localId ? world?.get(localId) : undefined;
   if (ship instanceof Ship) {
-    hpValue.textContent = `${ship.hp} / 3`;
+    hpValue.textContent = `${ship.hp} / 5`;
     scoreValue.textContent = String(ship.score);
-    combatHint.textContent = "SPACE — ВОГОНЬ  ·  SHIFT + SPACE — HOMING";
+    combatHint.textContent = "SPACE — ВОГОНЬ · SHIFT + SPACE — САМОНАВЕДЕННЯ";
   } else {
-    hpValue.textContent = "— / 3";
+    hpValue.textContent = "— / 5";
     const respawn = localId ? world?.respawns.get(localId) : undefined;
     scoreValue.textContent = String(respawn?.score ?? 0);
     combatHint.textContent = respawn
-      ? `РЕСПАУН ЗА ${respawn.remaining.toFixed(1)} S`
+      ? `ПОВЕРНЕННЯ ЗА ${respawn.remaining.toFixed(1)} С`
       : "ОЧІКУЄМО НА СЕРВЕР";
   }
 }

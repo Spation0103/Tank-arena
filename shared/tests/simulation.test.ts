@@ -50,3 +50,43 @@ test("simulation owns tank movement, firing, hit points and respawn", () => {
   assert.equal(target.hp, 2);
   assert.equal(shooter.score, 10);
 });
+
+test("arena borders stop tanks and bullets destroy obstacles", () => {
+  const simulation = new ArenaSimulation({ width: 960, height: 600 }, 6, {
+    obstacles: [{ x: 100, y: 100, radius: 20, hp: 1 }],
+  });
+  const shooter = simulation.addPlayer(asEntityId("shooter"), 0);
+  shooter.x = 950;
+  shooter.y = 300;
+  shooter.angle = 0;
+  simulation.step(
+    new Map([
+      [shooter.id, { input: { forward: true }, seq: asInputSequence(1) }],
+    ]),
+  );
+  assert.equal(shooter.x, 944);
+
+  shooter.x = 40;
+  shooter.y = 100;
+  simulation.fire(shooter, asInputSequence(2), false);
+  for (let tick = 0; tick < 5; tick += 1) simulation.step(new Map());
+  assert.equal(simulation.obstacles[0]?.hp, 0);
+  assert.equal(shooter.score, 40);
+});
+
+test("collecting a yellow power-up restores two health and respawns", () => {
+  const simulation = new ArenaSimulation({ width: 960, height: 600 }, 7, {
+    pickup: { x: 480, y: 300 },
+  });
+  const tank = simulation.addPlayer(asEntityId("pilot"), 0);
+  tank.x = 480;
+  tank.y = 300;
+  tank.hp = 1;
+  simulation.step(new Map());
+  assert.equal(tank.hp, 3);
+  assert.equal(simulation.pickup.active, false);
+
+  tank.x = 100;
+  for (let tick = 0; tick < 601; tick += 1) simulation.step(new Map());
+  assert.equal(simulation.pickup.active, true);
+});

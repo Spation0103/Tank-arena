@@ -34,11 +34,11 @@ export class CircleCollisionSystem {
       return;
     }
     if (first instanceof Pickup && second instanceof Ship) {
-      first.collect(second);
+      if (first.active) first.collect(second);
       return;
     }
     if (second instanceof Pickup && first instanceof Ship) {
-      second.collect(first);
+      if (second.active) second.collect(first);
     }
   }
 

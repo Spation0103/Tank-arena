@@ -45,8 +45,8 @@ test("two clients see movement and receive chat in the same room", async ({
     first.locator("#join-button").click(),
     second.locator("#join-button").click(),
   ]);
-  await expect(first.locator("#player-count")).toHaveText("2 TANKS");
-  await expect(second.locator("#player-count")).toHaveText("2 TANKS");
+  await expect(first.locator("#player-count")).toHaveText("2 ГРАВЦІ");
+  await expect(second.locator("#player-count")).toHaveText("2 ГРАВЦІ");
 
   const firstCapture = captures[0];
   const secondCapture = captures[1];

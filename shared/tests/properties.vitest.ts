@@ -53,6 +53,8 @@ describe("fast-check protocol, simulation, and validation properties", () => {
               },
             ],
             bullets: [],
+            obstacles: [],
+            pickup: { x: 480, y: 300, active: true },
           };
           const decoded = decodeSnapshotPacket(
             encodeSnapshotPacket(snapshot, id),
@@ -109,11 +111,13 @@ describe("fast-check protocol, simulation, and validation properties", () => {
               acknowledgements: new Map(),
               tanks,
               bullets,
+              obstacles: [],
+              pickup: { x: 480, y: 300, active: true },
             },
             asEntityId("pilot"),
           );
           expect(packet.byteLength).toBe(
-            16 + tankCount * 24 + bulletCount * 24,
+            26 + tankCount * 24 + bulletCount * 24,
           );
           const view = new DataView(packet);
           expect(view.getUint8(14)).toBe(tankCount);

@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/tank.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/tank.svg" />
-    <title>Tank Arena — JavaScript lab</title>
+    <title>Tank Arena — танкові бої</title>
   </head>
   <body>
     <main class="app">
@@ -34,11 +34,11 @@
 
       <section id="lobby" class="lobby-section" hidden>
         <div class="lobby-copy">
-          <p class="eyebrow">JAVASCRIPT LAB · 04 / NODE + STREAMS</p>
-          <h1>Обери <span>арену.</span></h1>
+          <p class="eyebrow">МУЛЬТИПЛЕЄРНА ТАНКОВА ГРА</p>
+          <h1>Обери <span>арену</span></h1>
           <p class="intro-copy">
-            Ассети завантажуються паралельно, а лобі оновлюється у фоні. Обери
-            ім’я та кімнату, щоб почати.
+            Знищуй перешкоди, збирай бонуси та бийся з іншими гравцями. Введи
+            ім’я й обери кімнату, щоб почати.
           </p>
         </div>
         <form id="lobby-form" class="lobby-card">
@@ -67,14 +67,14 @@
       <section id="game-shell" hidden>
         <section class="intro">
           <div>
-            <p class="eyebrow">JAVASCRIPT LAB · 01—08</p>
-            <h1>Тримай <span>арену.</span></h1>
+            <p class="eyebrow">ТАНКОВІ БОЇ · МУЛЬТИПЛЕЄР</p>
+            <h1>Бийся за <span>арену</span></h1>
             <p class="intro-copy">
-              Сервер авторитетно рахує рух і постріли. Клієнт передбачає власний
-              танк, а чужі показує з інтерполяцією.
+              Руйнуй каміння пострілами, збирай жовті аптечки (+2 здоров’я) та
+              не виїжджай за межі поля.
             </p>
           </div>
-          <div class="session-tag"><span></span> LIVE SIMULATION</div>
+          <div class="session-tag"><span></span> БОЙОВИЙ РЕЖИМ</div>
         </section>
 
         <section
@@ -85,24 +85,22 @@
         >
           <div class="arena-frame">
             <div class="arena-topline">
-              <span>SECTOR 07 <i> / </i> OPEN FIELD</span>
+              <span>БОЙОВА ЗОНА <i> / </i> ЗРУЙНУЙ ПЕРЕШКОДИ</span>
               <span id="player-count">0 TANKS</span>
             </div>
             <canvas id="arena" aria-label="Танкова арена"></canvas>
             <div class="arena-bottomline">
               <span
-                ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd
-                ><kbd>D</kbd> КЕРУВАННЯ</span
-              >
-              <span
-                ><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> ТЕЖ
-                ПРАЦЮЮТЬ</span
+                ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> РУХ
+                <span class="control-separator">·</span> <kbd>SPACE</kbd> ВОГОНЬ
+                <span class="control-separator">·</span>
+                <kbd>SHIFT</kbd> HOMING</span
               >
             </div>
           </div>
 
           <aside class="side-panel">
-            <section class="panel-card">
+            <section class="panel-card" hidden>
               <div class="panel-heading">
                 <span class="eyebrow">01 / TELEMETRY</span>
                 <span class="live-label">● LIVE</span>
@@ -127,7 +125,7 @@
               </div>
             </section>
 
-            <section class="panel-card experiments">
+            <section class="panel-card experiments" hidden>
               <div class="panel-heading">
                 <span class="eyebrow">02 / BREAK IT</span>
                 <span class="experiment-number">3 MODES</span>
@@ -152,7 +150,7 @@
 
             <section class="panel-card players-card">
               <div class="panel-heading">
-                <span class="eyebrow">03 / ROSTER</span>
+                <span class="eyebrow">ГРАВЦІ В КІМНАТІ</span>
                 <span class="experiment-number" id="room-id">ROOM —</span>
               </div>
               <ul id="player-list" class="player-list">
@@ -162,22 +160,24 @@
 
             <section class="panel-card combat-card">
               <div class="panel-heading">
-                <span class="eyebrow">04 / COMBAT</span>
-                <span class="experiment-number">LOCAL PILOT</span>
+                <span class="eyebrow">ТВІЙ ТАНК</span>
+                <span class="experiment-number">БОЄГОТОВНІСТЬ</span>
               </div>
               <div class="combat-stats">
                 <div>
-                  <span>ARMOR</span><strong id="hp-value">— / 3</strong>
+                  <span>ЗДОРОВ’Я</span><strong id="hp-value">— / 5</strong>
                 </div>
-                <div><span>SCORE</span><strong id="score-value">0</strong></div>
+                <div>
+                  <span>РАХУНОК</span><strong id="score-value">0</strong>
+                </div>
               </div>
               <p class="combat-hint" id="combat-hint">
-                <kbd>SPACE</kbd> ВОГОНЬ <kbd>SHIFT</kbd> +
-                <kbd>SPACE</kbd> HOMING
+                <kbd>SPACE</kbd> ВОГОНЬ <kbd>SHIFT</kbd> + <kbd>SPACE</kbd>
+                HOMING
               </p>
             </section>
 
-            <section class="panel-card netgraph-card">
+            <section class="panel-card netgraph-card" hidden>
               <div class="panel-heading">
                 <span class="eyebrow">05 / NETGRAPH</span>
                 <span class="experiment-number" id="network-protocol"
@@ -206,8 +206,8 @@
 
             <section class="panel-card chat-card">
               <div class="panel-heading">
-                <span class="eyebrow">06 / ROOM CHAT</span>
-                <span class="experiment-number">LIVE</span>
+                <span class="eyebrow">ЧАТ</span>
+                <span class="experiment-number">КІМНАТА</span>
               </div>
               <ol id="chat-log" class="chat-log" aria-live="polite">
                 <li class="chat-empty">Повідомлень ще немає</li>
@@ -244,13 +244,6 @@
             </div>
           </div>
         </section>
-
-        <footer class="footer">
-          <span>SERVER AUTHORITATIVE <b>·</b> INPUT, ПЕРЕДБАЧЕННЯ, ЗВІРКА</span>
-          <a href="./README.md" target="_blank" rel="noreferrer"
-            >ДОКУМЕНТАЦІЯ ↗</a
-          >
-        </footer>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>

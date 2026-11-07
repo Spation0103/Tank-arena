@@ -56,8 +56,8 @@ export class ClientPrediction {
     }
 
     this.correction = {
-      x: wrappedDelta(previous.x - this.state.x, 960),
-      y: wrappedDelta(previous.y - this.state.y, 600),
+      x: previous.x - this.state.x,
+      y: previous.y - this.state.y,
       angle: shortestAngle(previous.angle - this.state.angle),
     };
     this.correctionRemaining = RECONCILIATION_SECONDS;
@@ -72,8 +72,8 @@ export class ClientPrediction {
     const alpha = this.correctionRemaining / RECONCILIATION_SECONDS;
     return {
       ...this.state,
-      x: wrap(this.state.x + this.correction.x * alpha, 960),
-      y: wrap(this.state.y + this.correction.y * alpha, 600),
+      x: clamp(this.state.x + this.correction.x * alpha, 16, 944),
+      y: clamp(this.state.y + this.correction.y * alpha, 16, 584),
       angle: this.state.angle + this.correction.angle * alpha,
     };
   }
@@ -90,12 +90,8 @@ export class ClientPrediction {
   }
 }
 
-function wrappedDelta(delta: number, size: number): number {
-  return ((((delta + size / 2) % size) + size) % size) - size / 2;
-}
-
-function wrap(value: number, limit: number): number {
-  return ((value % limit) + limit) % limit;
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function shortestAngle(angle: number): number {

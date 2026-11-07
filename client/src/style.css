@@ -40,13 +40,13 @@ select {
 }
 
 .app {
-  max-width: 1360px;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 0 42px;
+  padding: 0 36px;
 }
 
 .topbar {
-  height: 74px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -71,6 +71,7 @@ select {
   color: #151a13;
   background: var(--lime);
   font-weight: 600;
+  border-radius: 9px;
 }
 
 .brand-muted {
@@ -118,7 +119,7 @@ select {
 h1 {
   margin: 13px 0 8px;
   font-size: clamp(36px, 5vw, 56px);
-  letter-spacing: -0.06em;
+  letter-spacing: -0.045em;
   line-height: 1;
 }
 
@@ -151,9 +152,11 @@ h1 span {
 .lobby-card {
   display: grid;
   gap: 10px;
-  padding: 22px;
-  border: 1px solid var(--line);
-  background: rgba(22, 28, 22, 0.88);
+  padding: 24px;
+  border: 1px solid #354231;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(28, 37, 27, 0.96), #171d17);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
 }
 
 .lobby-card label {
@@ -195,6 +198,16 @@ h1 span {
   cursor: pointer;
   font: 600 11px var(--mono);
   letter-spacing: 0.05em;
+  border-radius: 8px;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.join-button:not(:disabled):hover,
+.loading-buttons button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
 .join-button:disabled {
@@ -268,7 +281,8 @@ h1 span {
 .arena-frame,
 .panel-card {
   border: 1px solid var(--line);
-  background: rgba(22, 28, 22, 0.7);
+  border-radius: 13px;
+  background: rgba(22, 28, 22, 0.82);
 }
 
 .arena-topline,
@@ -281,6 +295,7 @@ h1 span {
   color: #a2ac99;
   font: 10px var(--mono);
   letter-spacing: 0.04em;
+  gap: 12px;
 }
 
 .arena-topline {
@@ -297,6 +312,8 @@ h1 span {
   display: block;
   width: 100%;
   aspect-ratio: 1.6;
+  background: #171d17;
+  box-shadow: inset 0 0 28px rgba(5, 9, 6, 0.5);
 }
 
 .arena-bottomline {
@@ -304,6 +321,17 @@ h1 span {
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 9px;
+}
+
+.arena-bottomline > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.control-separator {
+  padding: 0 4px;
+  color: #64725d;
 }
 
 kbd {
@@ -315,6 +343,8 @@ kbd {
   border: 1px solid #3b4437;
   color: #cbd4c1;
   font: 10px var(--mono);
+  border-radius: 5px;
+  background: #1b231a;
 }
 
 .side-panel {
@@ -324,6 +354,10 @@ kbd {
 
 .panel-card {
   padding: 16px;
+}
+
+.panel-card[hidden] {
+  display: none;
 }
 
 .net-metrics {
@@ -564,6 +598,8 @@ select {
 .chat-form {
   display: flex;
   border: 1px solid #3a4436;
+  border-radius: 7px;
+  overflow: hidden;
 }
 
 .chat-form input {
@@ -612,7 +648,7 @@ select {
 
 @media (max-width: 900px) {
   .app {
-    padding: 0 24px;
+    padding: 0 22px;
   }
 
   .game-layout {
@@ -627,7 +663,7 @@ select {
 
 @media (max-width: 700px) {
   .app {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .intro {
@@ -676,7 +712,7 @@ select {
   }
 
   .arena-bottomline span:last-child {
-    display: none;
+    display: flex;
   }
 }
 
@@ -690,13 +726,18 @@ select {
   }
 
   .arena-bottomline {
-    padding: 0 8px;
+    height: auto;
+    min-height: 45px;
+    padding: 6px 8px;
     font-size: 7px;
   }
 
-  kbd {
-    width: 16px;
+  .arena-bottomline kbd {
+    width: auto;
+    min-width: 16px;
     height: 17px;
-    margin-right: 1px;
+    padding: 0 3px;
+    margin-right: 0;
+    font-size: 8px;
   }
 }

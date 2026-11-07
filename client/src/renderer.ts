@@ -69,7 +69,8 @@ export function createRenderer(
           if (entity instanceof Asteroid) drawAsteroid(entity, position);
           break;
         case "pickup":
-          if (entity instanceof Pickup) drawPickup(entity, position);
+          if (entity instanceof Pickup && entity.active)
+            drawPickup(entity, position);
           break;
         case "particle":
           if (entity instanceof Particle) drawParticle(entity, position);
@@ -113,8 +114,9 @@ export function createRenderer(
       context.lineTo(width, y);
     }
     context.stroke();
-    context.strokeStyle = "rgba(185, 210, 156, 0.12)";
-    context.strokeRect(12.5, 12.5, width - 25, height - 25);
+    context.strokeStyle = "rgba(193, 232, 134, 0.55)";
+    context.lineWidth = 2;
+    context.strokeRect(1, 1, width - 2, height - 2);
   }
 
   function drawShip(ship: Ship, position: Vector2Like, isLocal: boolean): void {
@@ -159,9 +161,9 @@ export function createRenderer(
       position.x,
       position.y - 20,
     );
-    if (ship.hp < 3) {
-      context.fillStyle = "#e78770";
-      context.fillRect(position.x - 16, position.y - 27, 32 * (ship.hp / 3), 2);
+    if (ship.hp < 5) {
+      context.fillStyle = ship.hp <= 2 ? "#e78770" : "#c1e886";
+      context.fillRect(position.x - 16, position.y - 27, 32 * (ship.hp / 5), 2);
     }
   }
 
@@ -208,27 +210,43 @@ export function createRenderer(
         asteroid.radius * 2,
       );
       context.restore();
-      return;
+    } else {
+      context.save();
+      context.translate(position.x, position.y);
+      context.rotate(asteroid.rotation);
+      context.beginPath();
+      for (let index = 0; index < 9; index += 1) {
+        const angle = (index / 9) * Math.PI * 2;
+        const radius = asteroid.radius * (index % 2 === 0 ? 1 : 0.78);
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        if (index === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      }
+      context.closePath();
+      context.fillStyle = asteroid.color;
+      context.fill();
+      context.strokeStyle = "#a0a18a";
+      context.lineWidth = 2;
+      context.stroke();
+      context.restore();
     }
-    context.save();
-    context.translate(position.x, position.y);
-    context.rotate(asteroid.rotation);
-    context.beginPath();
-    for (let index = 0; index < 9; index += 1) {
-      const angle = (index / 9) * Math.PI * 2;
-      const radius = asteroid.radius * (index % 2 === 0 ? 1 : 0.78);
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
+    if (asteroid.hp < asteroid.maxHp) {
+      context.fillStyle = "rgba(13, 18, 14, 0.8)";
+      context.fillRect(
+        position.x - asteroid.radius,
+        position.y + asteroid.radius + 5,
+        asteroid.radius * 2,
+        3,
+      );
+      context.fillStyle = "#f0bd6b";
+      context.fillRect(
+        position.x - asteroid.radius,
+        position.y + asteroid.radius + 5,
+        (asteroid.radius * 2 * asteroid.hp) / asteroid.maxHp,
+        3,
+      );
     }
-    context.closePath();
-    context.fillStyle = asteroid.color;
-    context.fill();
-    context.strokeStyle = "#a0a18a";
-    context.lineWidth = 2;
-    context.stroke();
-    context.restore();
   }
 
   function drawPickup(pickup: Pickup, position: Vector2Like): void {
@@ -236,12 +254,15 @@ export function createRenderer(
     context.translate(position.x, position.y);
     context.rotate(pickup.rotation);
     context.fillStyle = pickup.color;
+    context.shadowColor = pickup.color;
+    context.shadowBlur = 14;
     context.fillRect(
       -pickup.radius,
       -pickup.radius,
       pickup.radius * 2,
       pickup.radius * 2,
     );
+    context.shadowBlur = 0;
     context.fillStyle = "#28281e";
     context.fillRect(-2, -pickup.radius + 4, 4, pickup.radius * 2 - 8);
     context.fillRect(-pickup.radius + 4, -2, pickup.radius * 2 - 8, 4);

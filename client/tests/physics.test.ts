@@ -21,7 +21,7 @@ test("tank integration is deterministic at the fixed timestep", () => {
   assert.ok(first.vy < 0);
 });
 
-test("tank wraps at all arena edges", () => {
+test("tank stops at all arena edges", () => {
   const rightEdge = {
     ...createTank("one", "#fff", ARENA_WIDTH - 1, 200),
     angle: 0,
@@ -32,8 +32,8 @@ test("tank wraps at all arena edges", () => {
     angle: Math.PI / 2,
     vy: 100,
   };
-  assert.ok(integrate(rightEdge, {}, FIXED_DT).x < 5);
-  assert.ok(integrate(bottomEdge, {}, FIXED_DT).y < 5);
+  assert.equal(integrate(rightEdge, {}, FIXED_DT).x, ARENA_WIDTH - 16);
+  assert.equal(integrate(bottomEdge, {}, FIXED_DT).y, ARENA_HEIGHT - 16);
 });
 
 test("tank speed remains capped", () => {

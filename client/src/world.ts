@@ -15,6 +15,7 @@ import type {
   PartialPlayerInput,
   RoomInfo,
 } from "../../shared/types.js";
+import { asEntityId } from "../../shared/types.js";
 
 interface RespawnState {
   remaining: number;
@@ -215,22 +216,32 @@ export function createArenaWorld(
 ): World {
   const world = new World({ events });
   const obstacles = config?.arena?.obstacles ?? [
-    { x: 170, y: 140, radius: 27, vx: -16, vy: 11 },
-    { x: 390, y: 430, radius: 37, vx: 12, vy: -9 },
-    { x: 690, y: 180, radius: 31, vx: -8, vy: 15 },
-    { x: 820, y: 440, radius: 23, vx: 18, vy: 12 },
-    { x: 530, y: 100, radius: 20, vx: 0, vy: 0 },
+    { x: 170, y: 140, radius: 27, vx: -16, vy: 11, hp: 3 },
+    { x: 390, y: 430, radius: 37, vx: 12, vy: -9, hp: 3 },
+    { x: 690, y: 180, radius: 31, vx: -8, vy: 15, hp: 3 },
+    { x: 820, y: 440, radius: 23, vx: 18, vy: 12, hp: 3 },
+    { x: 530, y: 100, radius: 20, vx: 0, vy: 0, hp: 3 },
   ];
-  for (const { x, y, radius, vx = 0, vy = 0 } of obstacles) {
+  for (const [
+    index,
+    { x, y, radius, vx = 0, vy = 0, hp = 3 },
+  ] of obstacles.entries()) {
     world.spawn(
       new Asteroid({
+        id: asEntityId(`arena-obstacle-${index}`),
         position: new Vector2(x, y),
         velocity: new Vector2(vx, vy),
         radius,
+        hp,
       }),
     );
   }
   const pickup = config?.arena?.pickup ?? { x: 480, y: 450 };
-  world.spawn(new Pickup({ position: new Vector2(pickup.x, pickup.y) }));
+  world.spawn(
+    new Pickup({
+      id: asEntityId("arena-pickup"),
+      position: new Vector2(pickup.x, pickup.y),
+    }),
+  );
   return world;
 }

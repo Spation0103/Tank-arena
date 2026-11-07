@@ -17,7 +17,7 @@ test("input packets encode sequence and flags in a little-endian DataView", () =
     homing: true,
   });
   const bytes = new Uint8Array(packet);
-  assert.deepEqual([...bytes], [1, 1, 0x78, 0x56, 0x34, 0x12, 0x39]);
+  assert.deepEqual([...bytes], [2, 1, 0x78, 0x56, 0x34, 0x12, 0x39]);
   assert.deepEqual(decodeInputPacket(packet), {
     sequence: 0x12345678,
     input: {
@@ -48,7 +48,7 @@ test("snapshot packets round-trip tanks, angles, bullets and per-client ack", ()
         vx: -1,
         vy: 2,
         angle: -Math.PI / 2,
-        hp: 2,
+        hp: 5,
         score: 40000,
       },
     ],
@@ -66,22 +66,28 @@ test("snapshot packets round-trip tanks, angles, bullets and per-client ack", ()
         vy: -11,
       },
     ],
+    obstacles: [{ index: 0, x: 120, y: 80, radius: 25, hp: 2, maxHp: 3 }],
+    pickup: { x: 480, y: 450, active: false },
   };
   const decoded = decodeSnapshotPacket(encodeSnapshotPacket(snapshot, pilotId));
   assert.equal(decoded.tick, 20);
   assert.equal(decoded.ack, 19);
-  assert.equal(decoded.tanks[0].hp, 2);
+  assert.equal(decoded.tanks[0].hp, 5);
   assert.equal(decoded.tanks[0].score, 40000);
   assert.ok(Math.abs(decoded.tanks[0].angle + Math.PI / 2) < 0.0001);
   assert.equal(decoded.bullets[0].fireSeq, 18);
   assert.equal(decoded.bullets[0].homing, true);
   assert.equal(decoded.bullets[0].vy, -11);
+  assert.deepEqual(decoded.obstacles, [
+    { index: 0, x: 120, y: 80, radius: 25, hp: 2, maxHp: 3 },
+  ]);
+  assert.deepEqual(decoded.pickup, { x: 480, y: 450, active: false });
 });
 
 test("invalid packet versions, reserved input bits and snapshot lengths reject", () => {
   const sequence = asInputSequence(1);
   const input = new Uint8Array(encodeInputPacket(sequence, {}));
-  input[0] = 2;
+  input[0] = 3;
   assert.throws(() => decodeInputPacket(input), /Invalid input packet/);
 
   const reserved = new Uint8Array(encodeInputPacket(sequence, {}));
@@ -96,6 +102,8 @@ test("invalid packet versions, reserved input bits and snapshot lengths reject",
         acknowledgements: new Map(),
         tanks: [],
         bullets: [],
+        obstacles: [],
+        pickup: { x: 480, y: 300, active: true },
       },
       asEntityId("pilot"),
     ),

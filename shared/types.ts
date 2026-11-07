@@ -80,7 +80,24 @@ export interface SimulationSnapshot {
   readonly serverTime: number;
   readonly tanks: readonly TankSnapshot[];
   readonly bullets: readonly BulletSnapshot[];
+  readonly obstacles: readonly ObstacleSnapshot[];
+  readonly pickup: PickupSnapshot;
   readonly acknowledgements: ReadonlyMap<EntityId, InputSequence>;
+}
+
+export interface ObstacleSnapshot {
+  readonly index: number;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly hp: number;
+  readonly maxHp: number;
+}
+
+export interface PickupSnapshot {
+  readonly x: number;
+  readonly y: number;
+  readonly active: boolean;
 }
 
 export interface ArenaConfig {
@@ -92,6 +109,7 @@ export interface ArenaConfig {
     readonly radius: number;
     readonly vx?: number;
     readonly vy?: number;
+    readonly hp?: number;
   }[];
   readonly pickup?: { readonly x: number; readonly y: number };
 }

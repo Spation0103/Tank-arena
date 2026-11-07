@@ -10,6 +10,7 @@ import {
   isServerMessage,
   isSnapshotStepNewer,
   parseClientMessage,
+  PROTOCOL_VERSION,
 } from "../protocol.js";
 import { FIXED_DT, createTank, integrate, sanitizeInput } from "../physics.js";
 import { ArenaSimulation, createSeededRandom } from "../simulation.js";
@@ -41,13 +42,11 @@ describe("shared physics edge cases", () => {
     expect(next.vy).toBeCloseTo(-5 * 0.985);
   });
 
-  it("wraps negative and over-boundary coordinates", () => {
+  it("clamps negative and over-boundary coordinates to the arena walls", () => {
     const state = { ...createTank(pilot, "#fff", -20, 1000), vx: 0, vy: 0 };
     const next = integrate(state, {}, 0);
-    expect(next.x).toBeGreaterThanOrEqual(0);
-    expect(next.x).toBeLessThan(960);
-    expect(next.y).toBeGreaterThanOrEqual(0);
-    expect(next.y).toBeLessThan(600);
+    expect(next.x).toBe(16);
+    expect(next.y).toBe(584);
   });
 });
 
@@ -163,7 +162,7 @@ describe("shared protocol validation edge cases", () => {
     const packet = new Uint8Array(encodeInputPacket(asInputSequence(1), {}));
     packet[0] = 9;
     expect(() => decodeInputPacket(packet)).toThrow(RangeError);
-    packet[0] = 1;
+    packet[0] = PROTOCOL_VERSION;
     packet[6] = 0x80;
     expect(() => decodeInputPacket(packet)).toThrow(RangeError);
 
@@ -186,6 +185,8 @@ describe("shared protocol validation edge cases", () => {
           },
         ],
         bullets: [],
+        obstacles: [],
+        pickup: { x: 480, y: 300, active: true },
       },
       pilot,
     );
@@ -211,12 +212,14 @@ describe("shared protocol validation edge cases", () => {
           homing: false,
         },
       ],
+      obstacles: [],
+      pickup: { x: 480, y: 300, active: true },
     };
     const packet = new Uint8Array(encodeSnapshotPacket(snapshot, pilot));
-    packet[19] = 2;
+    packet[26 + 3] = 2;
     expect(() => decodeSnapshotPacket(packet)).toThrow(/flags/);
     expect(() =>
-      decodeSnapshotPacket(encodeSnapshotPacket(snapshot, pilot).slice(0, 20)),
+      decodeSnapshotPacket(encodeSnapshotPacket(snapshot, pilot).slice(0, 26)),
     ).toThrow(/length/);
   });
 
@@ -227,6 +230,8 @@ describe("shared protocol validation edge cases", () => {
       acknowledgements: new Map([[pilot, asInputSequence(4)]]),
       tanks: [],
       bullets: [],
+      obstacles: [],
+      pickup: { x: 480, y: 300, active: true },
     };
     const message = encodeSnapshotJson(snapshot, pilot);
     expect(decodeSnapshotJson(message)).toEqual(message);
@@ -260,6 +265,8 @@ describe("shared protocol validation edge cases", () => {
         },
       ],
       bullets: [],
+      obstacles: [],
+      pickup: { x: 480, y: 300, active: true },
     };
     expect(() => encodeSnapshotPacket(malformed, pilot)).toThrow(RangeError);
   });

@@ -44,8 +44,8 @@ export function integrate<T extends PhysicsState>(
     angle,
     vx,
     vy,
-    x: wrap(tank.x + vx * dt, ARENA_WIDTH),
-    y: wrap(tank.y + vy * dt, ARENA_HEIGHT),
+    x: clamp(tank.x + vx * dt, 16, ARENA_WIDTH - 16),
+    y: clamp(tank.y + vy * dt, 16, ARENA_HEIGHT - 16),
   };
 }
 
@@ -62,6 +62,6 @@ export function sanitizeInput(
   };
 }
 
-function wrap(value: number, limit: number): number {
-  return ((value % limit) + limit) % limit;
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }

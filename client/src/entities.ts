@@ -80,10 +80,13 @@ export class Entity {
 
   update(dt: number, _world?: WorldEntities): void {
     this.previousPosition.copy(this.position);
-    this.position.set(
-      wrap(this.position.x + this.velocity.x * dt, ARENA_WIDTH),
-      wrap(this.position.y + this.velocity.y * dt, ARENA_HEIGHT),
-    );
+    const x = this.position.x + this.velocity.x * dt;
+    const y = this.position.y + this.velocity.y * dt;
+    if (x < 0 || x > ARENA_WIDTH || y < 0 || y > ARENA_HEIGHT) {
+      this.dead = true;
+      return;
+    }
+    this.position.set(x, y);
   }
 
   protected resetBase({
@@ -219,7 +222,7 @@ export class Ship extends Entity {
   }
 
   heal(amount = 1): void {
-    this.#hp = Math.min(3, this.#hp + amount);
+    this.#hp = Math.min(5, this.#hp + amount);
   }
 }
 
@@ -255,10 +258,13 @@ export class Bullet extends Entity {
       return;
     }
     this.behavior?.update(this, world, dt);
-    this.position.set(
-      wrap(this.position.x + this.velocity.x * dt, ARENA_WIDTH),
-      wrap(this.position.y + this.velocity.y * dt, ARENA_HEIGHT),
-    );
+    const x = this.position.x + this.velocity.x * dt;
+    const y = this.position.y + this.velocity.y * dt;
+    if (x < 0 || x > ARENA_WIDTH || y < 0 || y > ARENA_HEIGHT) {
+      this.dead = true;
+      return;
+    }
+    this.position.set(x, y);
   }
 
   reset(options: BulletOptions = {}): void {
@@ -280,6 +286,7 @@ export class Bullet extends Entity {
 export class Asteroid extends Entity {
   declare kind: "asteroid";
   hp: number;
+  maxHp: number;
   rotation: number;
 
   constructor({
@@ -292,11 +299,36 @@ export class Asteroid extends Entity {
   }: AsteroidOptions = {}) {
     super({ id, position, velocity, radius, color, kind: "asteroid" });
     this.hp = hp;
+    this.maxHp = hp;
     this.rotation = 0;
   }
 
   update(dt: number, _world?: WorldEntities): void {
-    super.update(dt);
+    this.previousPosition.copy(this.position);
+    this.position.set(
+      clamp(
+        this.position.x + this.velocity.x * dt,
+        this.radius,
+        ARENA_WIDTH - this.radius,
+      ),
+      clamp(
+        this.position.y + this.velocity.y * dt,
+        this.radius,
+        ARENA_HEIGHT - this.radius,
+      ),
+    );
+    if (
+      this.position.x === this.radius ||
+      this.position.x === ARENA_WIDTH - this.radius
+    ) {
+      this.velocity.x *= -1;
+    }
+    if (
+      this.position.y === this.radius ||
+      this.position.y === ARENA_HEIGHT - this.radius
+    ) {
+      this.velocity.y *= -1;
+    }
     this.rotation += dt * 0.16;
   }
 
@@ -311,6 +343,7 @@ export class Pickup extends Entity {
   declare kind: "pickup";
   behavior: RepairPickup;
   rotation: number;
+  active: boolean;
 
   constructor({
     id,
@@ -321,6 +354,7 @@ export class Pickup extends Entity {
     super({ id, position, radius, color, kind: "pickup" });
     this.behavior = new RepairPickup();
     this.rotation = 0;
+    this.active = true;
   }
 
   update(dt: number, _world?: WorldEntities): void {
@@ -413,10 +447,6 @@ export interface WorldEntities {
   spawn<T extends Entity>(entity: T): T;
   spawnBullet(options: BulletOptions): Bullet;
   spawnParticle(options: ParticleOptions): Particle;
-}
-
-function wrap(value: number, limit: number): number {
-  return ((value % limit) + limit) % limit;
 }
 
 function shortestAngle(delta: number): number {

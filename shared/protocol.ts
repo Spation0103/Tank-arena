@@ -10,14 +10,15 @@ import type {
   TankSnapshot,
 } from "./types.js";
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 export const INPUT_PACKET = 1;
 export const SNAPSHOT_PACKET = 2;
 export const INPUT_PACKET_BYTES = 7;
 
-const SNAPSHOT_HEADER_BYTES = 16;
+const SNAPSHOT_HEADER_BYTES = 26;
 const TANK_RECORD_BYTES = 24;
 const BULLET_RECORD_BYTES = 24;
+const OBSTACLE_RECORD_BYTES = 16;
 const MAX_UINT32 = 0xffffffff;
 
 const entityIdSchema = z.string().min(1).transform(asEntityId);
@@ -81,6 +82,7 @@ const arenaSchema = z.object({
         radius: z.number().positive(),
         vx: z.number().optional(),
         vy: z.number().optional(),
+        hp: z.number().int().positive().max(255).optional(),
       }),
     )
     .optional(),
@@ -108,7 +110,7 @@ const tankSnapshotSchema = z
     vx: z.number().finite(),
     vy: z.number().finite(),
     angle: z.number().finite(),
-    hp: z.number().int().min(0).max(3),
+    hp: z.number().int().min(0).max(5),
     score: z.number().int().nonnegative(),
     color: z.string().optional(),
   })
@@ -134,6 +136,21 @@ const stateMessageSchema = z.object({
   ack: sequenceSchema,
   tanks: z.array(tankSnapshotSchema),
   bullets: z.array(bulletSnapshotSchema),
+  obstacles: z.array(
+    z.object({
+      index: z.number().int().nonnegative(),
+      x: z.number().finite(),
+      y: z.number().finite(),
+      radius: z.number().positive(),
+      hp: z.number().int().nonnegative(),
+      maxHp: z.number().int().positive(),
+    }),
+  ),
+  pickup: z.object({
+    x: z.number().finite(),
+    y: z.number().finite(),
+    active: z.boolean(),
+  }),
 });
 
 export const ServerMessageSchema = z.discriminatedUnion("type", [
@@ -153,7 +170,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
         vy: z.number().finite(),
         angle: z.number().finite(),
         color: z.string(),
-        hp: z.number().int().min(0).max(3),
+        hp: z.number().int().min(0).max(5),
         score: z.number().int().nonnegative(),
       })
       .optional(),
@@ -262,13 +279,32 @@ export function encodeSnapshotPacket(
   snapshot: SimulationSnapshot,
   localId: EntityId,
 ): ArrayBuffer {
-  if (snapshot.tanks.length > 255 || snapshot.bullets.length > 255) {
+  if (
+    snapshot.tanks.length > 255 ||
+    snapshot.bullets.length > 255 ||
+    snapshot.obstacles.length > 255
+  ) {
     throw new RangeError("Snapshot entity counts must fit in one byte.");
+  }
+  if (
+    !Number.isFinite(snapshot.pickup.x) ||
+    !Number.isFinite(snapshot.pickup.y) ||
+    snapshot.obstacles.some(
+      (obstacle) =>
+        obstacle.hp < 0 ||
+        obstacle.hp > obstacle.maxHp ||
+        obstacle.maxHp > 255 ||
+        obstacle.index > 255 ||
+        ![obstacle.x, obstacle.y, obstacle.radius].every(Number.isFinite),
+    )
+  ) {
+    throw new RangeError("Snapshot arena values are out of range.");
   }
   const buffer = new ArrayBuffer(
     SNAPSHOT_HEADER_BYTES +
       snapshot.tanks.length * TANK_RECORD_BYTES +
-      snapshot.bullets.length * BULLET_RECORD_BYTES,
+      snapshot.bullets.length * BULLET_RECORD_BYTES +
+      snapshot.obstacles.length * OBSTACLE_RECORD_BYTES,
   );
   const view = new DataView(buffer);
   view.setUint8(0, PROTOCOL_VERSION);
@@ -278,6 +314,10 @@ export function encodeSnapshotPacket(
   view.setUint32(10, snapshot.serverTime, true);
   view.setUint8(14, snapshot.tanks.length);
   view.setUint8(15, snapshot.bullets.length);
+  view.setUint8(16, snapshot.obstacles.length);
+  view.setUint8(17, Number(snapshot.pickup.active));
+  view.setFloat32(18, snapshot.pickup.x, true);
+  view.setFloat32(22, snapshot.pickup.y, true);
 
   let offset = SNAPSHOT_HEADER_BYTES;
   for (const tank of snapshot.tanks) {
@@ -302,6 +342,15 @@ export function encodeSnapshotPacket(
     view.setFloat32(offset + 20, bullet.vy, true);
     offset += BULLET_RECORD_BYTES;
   }
+  for (const obstacle of snapshot.obstacles) {
+    view.setUint8(offset, obstacle.index);
+    view.setFloat32(offset + 1, obstacle.x, true);
+    view.setFloat32(offset + 5, obstacle.y, true);
+    view.setFloat32(offset + 9, obstacle.radius, true);
+    view.setUint8(offset + 13, obstacle.hp);
+    view.setUint8(offset + 14, obstacle.maxHp);
+    offset += OBSTACLE_RECORD_BYTES;
+  }
   return buffer;
 }
 
@@ -318,16 +367,21 @@ export function decodeSnapshotPacket(
   }
   const tankCount = view.getUint8(14);
   const bulletCount = view.getUint8(15);
+  const obstacleCount = view.getUint8(16);
+  const pickupActive = view.getUint8(17);
+  if (pickupActive > 1) throw new RangeError("Invalid pickup flags.");
   const expectedLength =
     SNAPSHOT_HEADER_BYTES +
     tankCount * TANK_RECORD_BYTES +
-    bulletCount * BULLET_RECORD_BYTES;
+    bulletCount * BULLET_RECORD_BYTES +
+    obstacleCount * OBSTACLE_RECORD_BYTES;
   if (view.byteLength !== expectedLength) {
     throw new RangeError("Snapshot packet has an invalid length.");
   }
 
   const tanks: TankSnapshot[] = [];
   const bullets: BulletSnapshot[] = [];
+  const obstacles: StateMessage["obstacles"][number][] = [];
   let offset = SNAPSHOT_HEADER_BYTES;
   for (let index = 0; index < tankCount; index += 1) {
     const tank: TankSnapshot = {
@@ -363,6 +417,37 @@ export function decodeSnapshotPacket(
     bullets.push(bullet);
     offset += BULLET_RECORD_BYTES;
   }
+  for (let index = 0; index < obstacleCount; index += 1) {
+    const obstacle = {
+      index: view.getUint8(offset),
+      x: view.getFloat32(offset + 1, true),
+      y: view.getFloat32(offset + 5, true),
+      radius: view.getFloat32(offset + 9, true),
+      hp: view.getUint8(offset + 13),
+      maxHp: view.getUint8(offset + 14),
+    };
+    if (view.getUint8(offset + 15) !== 0) {
+      throw new RangeError("Reserved obstacle flags must be zero.");
+    }
+    if (
+      ![obstacle.x, obstacle.y, obstacle.radius].every(Number.isFinite) ||
+      obstacle.radius <= 0 ||
+      obstacle.hp > obstacle.maxHp ||
+      obstacle.maxHp === 0
+    ) {
+      throw new RangeError("Invalid obstacle values.");
+    }
+    obstacles.push(obstacle);
+    offset += OBSTACLE_RECORD_BYTES;
+  }
+  const pickup = {
+    x: view.getFloat32(18, true),
+    y: view.getFloat32(22, true),
+    active: Boolean(pickupActive),
+  };
+  if (![pickup.x, pickup.y].every(Number.isFinite)) {
+    throw new RangeError("Pickup coordinates must be finite.");
+  }
   return {
     type: "state",
     tick: asSimulationStep(view.getUint32(2, true)),
@@ -370,6 +455,8 @@ export function decodeSnapshotPacket(
     serverTime: view.getUint32(10, true),
     tanks,
     bullets,
+    obstacles,
+    pickup,
   };
 }
 
@@ -384,6 +471,8 @@ export function encodeSnapshotJson(
     ack: snapshot.acknowledgements.get(localId) ?? asInputSequence(0),
     tanks: [...snapshot.tanks],
     bullets: [...snapshot.bullets],
+    obstacles: [...snapshot.obstacles],
+    pickup: { ...snapshot.pickup },
   };
 }
 
@@ -437,7 +526,7 @@ function validateTankValues(tank: {
   if (![tank.x, tank.y, tank.vx, tank.vy].every(Number.isFinite)) {
     throw new RangeError("Tank coordinates and velocity must be finite.");
   }
-  if (tank.hp > 3) throw new RangeError("Tank HP is out of range.");
+  if (tank.hp > 5) throw new RangeError("Tank HP is out of range.");
 }
 
 function validateBulletValues(
