@@ -209,157 +209,169 @@ test("HTTP serves health, GET/POST rooms, safe static files and rejects traversa
     body: JSON.stringify({ name: "Custom Room", maxPlayers: 6 }),
   });
 
-  test("WebSocket upgrades validate Origin and enforce per-IP connection limits", async (t) => {
-    const { app, address } = await createFixture(t, {
-      allowedOrigins: ["https://allowed.example"],
-      maxConnectionsPerIp: 1,
-    });
-    const denied = new Promise((resolve, reject) => {
-      const socket = new WebSocket(`ws://127.0.0.1:${address.port}/ws`, {
-        headers: { Origin: "https://attacker.example" },
+  await t.test(
+    "WebSocket upgrades validate Origin and enforce per-IP connection limits",
+    async (t) => {
+      const { app, address } = await createFixture(t, {
+        allowedOrigins: ["https://allowed.example"],
+        maxConnectionsPerIp: 1,
       });
-      socket.once("unexpected-response", (_request, response) => {
-        resolve(response.statusCode);
-        response.resume();
+      const denied = new Promise((resolve, reject) => {
+        const socket = new WebSocket(`ws://127.0.0.1:${address.port}/ws`, {
+          headers: { Origin: "https://attacker.example" },
+        });
+        socket.once("unexpected-response", (_request, response) => {
+          resolve(response.statusCode);
+          response.resume();
+        });
+        socket.once("error", reject);
       });
-      socket.once("error", reject);
-    });
-    assert.equal(await denied, 403);
+      assert.equal(await denied, 403);
 
-    const first = await openSocket(`ws://127.0.0.1:${address.port}/ws`);
-    const secondDenied = new Promise((resolve, reject) => {
-      const socket = new WebSocket(`ws://127.0.0.1:${address.port}/ws`, {
-        headers: { Origin: "https://allowed.example" },
+      const first = await openSocket(`ws://127.0.0.1:${address.port}/ws`);
+      const secondDenied = new Promise((resolve, reject) => {
+        const socket = new WebSocket(`ws://127.0.0.1:${address.port}/ws`, {
+          headers: { Origin: "https://allowed.example" },
+        });
+        socket.once("unexpected-response", (_request, response) => {
+          resolve(response.statusCode);
+          response.resume();
+        });
+        socket.once("error", reject);
       });
-      socket.once("unexpected-response", (_request, response) => {
-        resolve(response.statusCode);
-        response.resume();
-      });
-      socket.once("error", reject);
-    });
-    assert.equal(await secondDenied, 429);
-    const firstClosed = closed(first);
-    first.close();
-    await firstClosed;
-    assert.equal(app.rooms.rooms.size, 2);
-  });
+      assert.equal(await secondDenied, 429);
+      const firstClosed = closed(first);
+      first.close();
+      await firstClosed;
+      assert.equal(app.rooms.rooms.size, 2);
+    },
+  );
 
-  test("graceful shutdown notifies clients, closes with 1001, and drains room logs", async (t) => {
-    const { app, wsUrl } = await createFixture(t);
-    const socket = await openSocket(wsUrl);
-    const welcome = nextMessage(
-      socket,
-      (message) => message.type === "welcome",
-    );
-    socket.send(
-      JSON.stringify({
-        type: "join",
-        roomId: "ALPHA-07",
-        name: "Shutdown test",
-        protocol: "json",
-      }),
-    );
-    await welcome;
-    const shutdownMessage = nextMessage(
-      socket,
-      (message) => message.type === "shutdown",
-    );
-    const socketClosed = closed(socket);
-    await app.close();
-    assert.equal((await shutdownMessage).type, "shutdown");
-    assert.equal((await socketClosed).code, 1001);
-  });
+  await t.test(
+    "graceful shutdown notifies clients, closes with 1001, and drains room logs",
+    async (t) => {
+      const { app, wsUrl } = await createFixture(t);
+      const socket = await openSocket(wsUrl);
+      const welcome = nextMessage(
+        socket,
+        (message) => message.type === "welcome",
+      );
+      socket.send(
+        JSON.stringify({
+          type: "join",
+          roomId: "ALPHA-07",
+          name: "Shutdown test",
+          protocol: "json",
+        }),
+      );
+      await welcome;
+      const shutdownMessage = nextMessage(
+        socket,
+        (message) => message.type === "shutdown",
+      );
+      const socketClosed = closed(socket);
+      await app.close();
+      assert.equal((await shutdownMessage).type, "shutdown");
+      assert.equal((await socketClosed).code, 1001);
+    },
+  );
 
-  test("malformed frame flood disconnects the sender while another room keeps ticking", async (t) => {
-    const { wsUrl } = await createFixture(t);
-    const player = await openSocket(wsUrl);
-    const welcome = nextMessage(
-      player,
-      (message) => message.type === "welcome",
-    );
-    player.send(
-      JSON.stringify({
-        type: "join",
-        roomId: "BRAVO-12",
-        name: "Active player",
-        protocol: "json",
-      }),
-    );
-    await welcome;
+  await t.test(
+    "malformed frame flood disconnects the sender while another room keeps ticking",
+    async (t) => {
+      const { wsUrl } = await createFixture(t);
+      const player = await openSocket(wsUrl);
+      const welcome = nextMessage(
+        player,
+        (message) => message.type === "welcome",
+      );
+      player.send(
+        JSON.stringify({
+          type: "join",
+          roomId: "BRAVO-12",
+          name: "Active player",
+          protocol: "json",
+        }),
+      );
+      await welcome;
 
-    const malicious = await openSocket(wsUrl);
-    const maliciousWelcome = nextMessage(
-      malicious,
-      (message) => message.type === "welcome",
-    );
-    malicious.send(
-      JSON.stringify({
-        type: "join",
-        roomId: "ALPHA-07",
-        name: "Malformed client",
-        protocol: "json",
-      }),
-    );
-    await maliciousWelcome;
-    const maliciousClosed = closed(malicious);
-    const otherRoomTick = nextMessage(
-      player,
-      (message) => message.type === "state",
-    );
-    for (let index = 0; index < 1000; index += 1) {
-      malicious.send("{not-json");
-    }
-    assert.equal((await maliciousClosed).code, 1007);
-    assert.equal((await otherRoomTick).type, "state");
-    const playerClosed = closed(player);
-    player.close();
-    await playerClosed;
-  });
+      const malicious = await openSocket(wsUrl);
+      const maliciousWelcome = nextMessage(
+        malicious,
+        (message) => message.type === "welcome",
+      );
+      malicious.send(
+        JSON.stringify({
+          type: "join",
+          roomId: "ALPHA-07",
+          name: "Malformed client",
+          protocol: "json",
+        }),
+      );
+      await maliciousWelcome;
+      const maliciousClosed = closed(malicious);
+      const otherRoomTick = nextMessage(
+        player,
+        (message) => message.type === "state",
+      );
+      for (let index = 0; index < 1000; index += 1) {
+        malicious.send("{not-json");
+      }
+      assert.equal((await maliciousClosed).code, 1007);
+      assert.equal((await otherRoomTick).type, "state");
+      const playerClosed = closed(player);
+      player.close();
+      await playerClosed;
+    },
+  );
 
-  test("disconnecting mid-match removes only that player from the room", async (t) => {
-    const { app, wsUrl } = await createFixture(t);
-    const first = await openSocket(wsUrl);
-    const firstWelcome = nextMessage(
-      first,
-      (message) => message.type === "welcome",
-    );
-    first.send(
-      JSON.stringify({
-        type: "join",
-        roomId: "ALPHA-07",
-        name: "First",
-        protocol: "json",
-      }),
-    );
-    await firstWelcome;
+  await t.test(
+    "disconnecting mid-match removes only that player from the room",
+    async (t) => {
+      const { app, wsUrl } = await createFixture(t);
+      const first = await openSocket(wsUrl);
+      const firstWelcome = nextMessage(
+        first,
+        (message) => message.type === "welcome",
+      );
+      first.send(
+        JSON.stringify({
+          type: "join",
+          roomId: "ALPHA-07",
+          name: "First",
+          protocol: "json",
+        }),
+      );
+      await firstWelcome;
 
-    const second = await openSocket(wsUrl);
-    const secondWelcome = nextMessage(
-      second,
-      (message) => message.type === "welcome",
-    );
-    const rosterLeave = nextMessage(
-      second,
-      (message) => message.type === "room" && message.action === "leave",
-    );
-    second.send(
-      JSON.stringify({
-        type: "join",
-        roomId: "ALPHA-07",
-        name: "Second",
-        protocol: "json",
-      }),
-    );
-    await secondWelcome;
-    const firstClosed = closed(first);
-    const secondClosed = closed(second);
-    first.terminate();
-    await firstClosed;
-    assert.equal((await rosterLeave).player.name, "First");
-    assert.equal(app.rooms.get("ALPHA-07")?.size, 1);
-    second.close();
-    await secondClosed;
-  });
+      const second = await openSocket(wsUrl);
+      const secondWelcome = nextMessage(
+        second,
+        (message) => message.type === "welcome",
+      );
+      const rosterLeave = nextMessage(
+        second,
+        (message) => message.type === "room" && message.action === "leave",
+      );
+      second.send(
+        JSON.stringify({
+          type: "join",
+          roomId: "ALPHA-07",
+          name: "Second",
+          protocol: "json",
+        }),
+      );
+      await secondWelcome;
+      const firstClosed = closed(first);
+      const secondClosed = closed(second);
+      first.terminate();
+      await firstClosed;
+      assert.equal((await rosterLeave).player.name, "First");
+      assert.equal(app.rooms.get("ALPHA-07")?.size, 1);
+      second.close();
+      await secondClosed;
+    },
+  );
   assert.equal(created.status, 201);
   assert.equal((await created.json()).name, "Custom Room");
 
