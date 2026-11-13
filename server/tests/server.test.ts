@@ -103,6 +103,21 @@ test("config validates port and resolves log directory from environment", () => 
   const config = readConfig({ PORT: "4321", LOG_DIR: ".test-logs" });
   assert.equal(config.port, 4321);
   assert.ok(path.isAbsolute(config.logDirectory));
+  assert.equal(
+    readConfig({
+      PORT: "3001",
+      RAILWAY_GIT_COMMIT_SHA: "railway-commit-sha",
+    }).buildSha,
+    "railway-commit-sha",
+  );
+  assert.equal(
+    readConfig({
+      PORT: "3001",
+      BUILD_SHA: "lab-08",
+      RAILWAY_GIT_COMMIT_SHA: "railway-commit-sha",
+    }).buildSha,
+    "lab-08",
+  );
   assert.throws(() => readConfig({ PORT: "70000" }), ZodError);
   assert.throws(() => readConfig({ PORT: "abc" }), ZodError);
   assert.throws(

@@ -17,16 +17,25 @@ path `/data`; `LOG_DIR` у контейнері заданий як `/data/logs`
 Dockerfile `VOLUME`: Railway відхиляє цю інструкцію під час валідації.
 
 Workflow [release.yml](./.github/workflows/release.yml) публікує образ у GHCR для
-тегів `lab-08` та `v*`. Для автоматичного деплою треба налаштувати secrets
-`DEPLOY_WEBHOOK_URL` і, якщо цього вимагає хостинг, `DEPLOY_WEBHOOK_TOKEN`.
-Хостинг має підтримувати Node-контейнер, WebSocket upgrade та HTTPS/WSS.
-Задайте `ALLOWED_ORIGINS` точним origin вебсайту; `TRUST_PROXY=true` вмикайте
-лише за наявності довіреного reverse proxy. Решта лімітів і змінних описані в
+тегів `lab-08` та `v*`. Для Railway створіть сервіс із цього GitHub-репозиторію
+та використайте Dockerfile у корені. У налаштуваннях сервісу задайте healthcheck
+path `/ready`, згенеруйте публічний домен і встановіть змінні:
+`ALLOWED_ORIGINS=https://<домен-сервісу>`, `TRUST_PROXY=true`,
+`LOG_DIR=/data/logs`. Порт сервер читає з Railway-змінної `PORT`, а build SHA —
+з `RAILWAY_GIT_COMMIT_SHA`, якщо він не заданий у Docker image. Додайте Railway
+Volume з mount path `/data`, щоб зберігати журнали між деплоями. WebSocket працює
+за шляхом `/ws` через TLS-домен хостингу. Інші змінні описані в
 [.env.example](./.env.example).
 
-Живої публічної адреси поки немає: цей workspace не має налаштованого
-GitHub remote чи hosting provider. Тому зовнішній WSS, RTT між мережами,
-теги `lab-08`/`v1.0.0` і відео захисту тут не заявляються як готові.
+Теги `lab-01`–`lab-08` опубліковані в GitHub. Оскільки історія репозиторію не
+містить окремих знімків для кожної лабораторної, наразі всі теги вказують на
+один коміт. Docker, health/readiness endpoints, Prometheus-метрики та CI-перевірка
+production-образу підготовлені. Надана Railway-адреса:
+[https://tank-arena-tank-5c98.up.railway.app](https://tank-arena-tank-5c98.up.railway.app).
+У браузері перевірено `/ready`, `/metrics` (HTTP 200) і WebSocket handshake на
+`wss://<домен-сервісу>/ws`; зовнішній probe натомість отримував `429` від Railway.
+Для демонстрації в README ще потрібно додати власний вимір RTT між мережами та
+відео захисту.
 
 ## Запуск
 

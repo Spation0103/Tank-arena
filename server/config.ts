@@ -51,6 +51,15 @@ export function readConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): ServerConfig {
   const parsed = EnvironmentSchema.parse(environment);
+  const railwayCommitSha =
+    parsed.BUILD_SHA === "development" && environment.RAILWAY_GIT_COMMIT_SHA
+      ? z
+          .string()
+          .trim()
+          .min(1)
+          .max(128)
+          .parse(environment.RAILWAY_GIT_COMMIT_SHA)
+      : parsed.BUILD_SHA;
   return Object.freeze({
     port: parsed.PORT,
     logDirectory: path.resolve(
@@ -76,7 +85,7 @@ export function readConfig(
     maxRooms: parsed.MAX_ROOMS,
     maxPlayersPerRoom: parsed.MAX_PLAYERS_PER_ROOM,
     trustProxy: parsed.TRUST_PROXY,
-    buildSha: parsed.BUILD_SHA,
+    buildSha: railwayCommitSha,
     logLevel: parsed.LOG_LEVEL,
   });
 }
